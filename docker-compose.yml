@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: controld_user
+      POSTGRES_PASSWORD: your_strong_password_change_this
+      POSTGRES_DB: controldb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://controld_user:your_strong_password_change_this@postgres:5432/controldb
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      CONTROLD_API_KEY: api.cb72eb7d33701941875e9741b36a84550e6e3aaebbc83c6b58b6ce9d159153ca
+      FRONTEND_URL: https://control.asmitainfocom.in
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    command: sh -c "npx prisma migrate deploy && npm start"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
